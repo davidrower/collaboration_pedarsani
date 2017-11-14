@@ -1,0 +1,7 @@
+These are files to be used for research in the Pedarsani group at UCSB. 
+
+These files include a single-road network with paramterizations for CACC and ACC capable vehicles in the SUMO microscopic traffic simulator, with IIDM implemented. 
+
+The specific build of SUMO uses files from this repository: https://github.com/ucbtrans/sumo-project 
+
+Some notation in the platoon_functions.py file have been modified to match our notation. 

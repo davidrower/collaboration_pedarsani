@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes>
+  <vType id="CarCACC" length="5.0" color="0,1,0"     accel="2.6" decel="4.5" tau="2.05" stepping="1.0" sigma="0.0" impatience="0.0" minGap="4.0" maxSpeed="70.0"/>
+  <vType id="CarACC"  length="5.0" color="0.5,0.5,0" accel="2.6" decel="4.5" tau="0.85" stepping="1.0" sigma="0.0" impatience="0.0" minGap="1.0" maxSpeed="70.0"/>
+  <vType id="CarM"    length="5.0" color="1,0,0"     accel="2.6" decel="4.5" tau="2.05" stepping="1.0" sigma="0.0" impatience="0.0" minGap="4.0" maxSpeed="70.0"/>
+
+  <route id="1" edges="gneE2"/>
+  <vehicle depart="0" id="veh1" route="1" type="CarM"/>
+  <vehicle depart="2" id="veh111" route="1" type="CarM"/>
+  <vehicle depart="3" id="veh222" route="1" type="CarM"/>
+  <vehicle depart="4" id="veh333" route="1" type="CarACC"/>
+  <vehicle depart="5" id="veh444" route="1" type="CarM"/>
+  <vehicle depart="6" id="veh555" route="1" type="CarACC"/>
+  <vehicle depart="7" id="veh666" route="1" type="CarCACC"/>
+  <vehicle depart="8" id="veh777" route="1" type="CarCACC"/>
+  <vehicle depart="9" id="veh888" route="1" type="CarCACC"/>
+  <vehicle depart="10" id="veh999" route="1" type="CarCACC"/>
+  <vehicle depart="11" id="veh1111" route="1" type="CarCACC"/>
+  <vehicle depart="12" id="veh7777" route="1" type="CarCACC"/>
+  <vehicle depart="13" id="veh8888" route="1" type="CarCACC"/>
+  <vehicle depart="14" id="veh9999" route="1" type="CarACC"/>
+  <vehicle depart="15" id="veh10000" route="1" type="CarCACC"/>
+  <vehicle depart="100" id="veh2" route="1" type="CarM"/>
+  <vehicle depart="200" id="veh3" route="1" type="CarCACC"/>
+  <vehicle depart="300" id="veh4" route="1" type="CarM"/>
+  <vehicle depart="400" id="veh5" route="1" type="CarCACC"/>
+  <vehicle depart="500" id="veh6" route="1" type="CarCACC"/>
+  <vehicle depart="600" id="veh7" route="1" type="CarCACC"/>
+  <vehicle depart="700" id="veh8" route="1" type="CarCACC"/>
+  <vehicle depart="800" id="veh9" route="1" type="CarCACC"/>
+  <vehicle depart="900" id="veh10" route="1" type="CarCACC"/>
+  <vehicle depart="1000" id="veh11" route="1" type="CarCACC"/>
+  <vehicle depart="1100" id="veh12" route="1" type="CarCACC"/>
+  <vehicle depart="1200" id="veh13" route="1" type="CarM"/>
+  <vehicle depart="1300" id="veh14" route="1" type="CarM"/>
+  <vehicle depart="1400" id="veh15" route="1" type="CarCACC"/>
+  <vehicle depart="1500" id="veh16" route="1" type="CarCACC"/>
+  <vehicle depart="1600" id="veh17" route="1" type="CarCACC"/>
+  <vehicle depart="1700" id="veh18" route="1" type="CarM"/>
+  <vehicle depart="1800" id="veh19" route="1" type="CarCACC"/>
+  <vehicle depart="1900" id="veh20" route="1" type="CarCACC"/>
+  
+</routes>
