@@ -1,0 +1,131 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{Ramtin Sumo Notes}
+\author{ }
+\date{November 2017}
+
+\usepackage{natbib}
+\usepackage{graphicx}
+
+\usepackage[dvipsnames]{xcolor}
+\usepackage{listings}
+\lstset{frame=tb,
+  language=sh,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{BlueViolet},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+  mathescape = true,
+}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
+
+\newcommand{\dollar}{\mbox{\textdollar}}
+
+\begin{document}
+
+\maketitle
+
+\section{Building Sumo with /ucbtrans/sumo-project}
+
+\subsection{Warnings}
+I have only built SUMO with the additions on Ubuntu 16.04, so be warned this may not work on all other systems. Also be warned, it may be possible to get around using these dependencies by disabling certain features of SUMO, or it may be possible to use different packages to suffice for the dependencies, but this worked for me.
+
+\subsection{Setting up the directories}
+First, you need to download the source files of the repository, the link is \href{https://github.com/ucbtrans/sumo-project}{here}, and the source files of SUMO 0.30.0 which can be found  \href{https://sourceforge.net/projects/sumo/files/sumo/version%200.30.0/}{here}.
+
+After extracting the files from the Github repository, you can find a directory sumo-project-master/sumo-0.30.0, in which you should copy the source files for SUMO 0.30.0. You can simply drag the SUMO 0.30.0 source folder into the sumo-project-master directory, and a reasonable GUI will ask you if you'd like to merge the folders. You should click yes, then make sure NOT to replace the sumo-project-master files, as these add the IIDM functionality we desire.
+
+\subsection{Dependencies}
+Now we are almost ready to compile the project. There are only two dependencies (that I did not already have on a relatively clean system) required to do this. The first is Xerces-C++ (some kind of XML parser). You can install it with the package manager. 
+\begin{lstlisting}
+sudo apt-get install libxerces-c-dev
+\end{lstlisting}
+ The second dependency is FOX (some kind of GUI toolkit), which can also be installed via the package manager.
+\begin{lstlisting}
+sudo apt-get install libfox-1.6-dev
+\end{lstlisting}
+
+\subsection{Compiling the project}
+Warning: I do not have a great understanding of this process, but bugs aren't too hard to track since they usually point to missing dependencies/files. 
+
+To compile the project, you need to first need to cd into the sumo-project-master/sumo-0.30.0 directory.
+\begin{lstlisting}
+cd ~/<specific to you>/sumo-project-master/sumo-0.30.0
+\end{lstlisting}
+Then, you need to run the ./configure command (again not really sure what this does...)
+\begin{lstlisting}
+./configure
+\end{lstlisting}
+Finally, we are ready to make the project. There are a few optional arguments to the make command, although I am not quite sure what we need yet, so I have just used the default settings.
+\begin{lstlisting}
+make
+\end{lstlisting}
+
+If this works successfully, pat yourself on the back. Then, before you get too excited, remember to add the environment variable to your ~/.bashrc file, so that you can communicate to SUMO with Python. To do this, simply open your bash profile. 
+\begin{lstlisting}
+gedit ~/.bashrc
+\end{lstlisting}
+and paste this line into the text file
+\begin{lstlisting}
+export SUMO_HOME=$\$$HOME/<specific to you>/sumo-project-master/sumo-0.30.0
+\end{lstlisting}
+Also recommended: paste this line, which will allow you to run SUMO from the command line
+\begin{lstlisting}
+export PATH=$\$$PATH:$\$$HOME/sumo/sumo-0.30.0/bin
+\end{lstlisting}
+
+\subsection{Running Examples}
+There are Python scripts that run each example, each with a name that starts with "runner" and ends with ".py". These files can be executed directly if you change the file access permissions to add executability.
+\begin{lstlisting}
+chmod +x runner.py
+\end{lstlisting}
+Then you can simply run the example. 
+\begin{lstlisting}
+./runner.py
+\end{lstlisting}
+Some of these examples will work right off the bat - like /example/redLight\textunderscore simulations. Some will not. 
+
+\subsubsection{Platoon Bug Fix}
+One of the cases I have been able to debug is those examples that use platooning functions. If you run the script without modifying the runner file, you may run into an error complaining that the traci module doesn't exist. 
+
+The bug fix is simple - in the runner.py file, near the beginning, you will find a line. 
+\begin{lstlisting}
+from platoon_functions import *
+\end{lstlisting}
+In the platoon\textunderscore functions file, traci is imported, although Python does not yet know where the traci module can be found. In the original runner file, after the line shown above, you will see a big try/except statement resembling
+\begin{lstlisting}[language=Python]
+# import python modules from $\$$SUMO_HOME/tools directory
+try:
+    blah
+except ImportError:
+    blah
+\end{lstlisting}
+This block tells Python where to find your SUMO files. Move the line
+\begin{lstlisting}
+from platoon_functions import *
+\end{lstlisting}
+to be below that try/except statement. This should resolve the error and allow traci to be imported in the platoon\textunderscore functions module. 
+
+\section{Conclusion}
+``I always thought something was fundamentally wrong with the universe'' \citep{adams1995hitchhiker}
+
+\bibliographystyle{plain}
+\bibliography{references}
+\end{document}
