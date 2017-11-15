@@ -24,7 +24,7 @@ import pdb
 #   This function controls the platoons and performs inter-vehicle communication
 #   to prevent crashes
 ################################################################################
-def platoon_control(accTau, accMinGap, targetTau, targetMinGap, platoon_comm):
+def platoon_control(caccTau, caccMinGap, targetTau, targetMinGap, platoon_comm):
 	allvehicles = traci.vehicle.getIDList();
 	
 	# Go through and make sure all vehicles are still in simulation
@@ -36,7 +36,7 @@ def platoon_control(accTau, accMinGap, targetTau, targetMinGap, platoon_comm):
 	for platoon in settings.platoons:
 		index += 1
 		
-		if platoon_maintenance(platoon, accTau, accMinGap, allvehicles) == -1:
+		if platoon_maintenance(platoon, caccTau, caccMinGap, allvehicles) == -1:
 			continue
 		
 		# Communication step
@@ -69,7 +69,7 @@ def platoon_control(accTau, accMinGap, targetTau, targetMinGap, platoon_comm):
 #   This function performs maintenance on platoons by removing vehicles from 
 #   them for various reasons
 ################################################################################
-def platoon_maintenance(platoon, accTau, accMinGap, allvehicles): 
+def platoon_maintenance(platoon, caccTau, caccMinGap, allvehicles): 
 	# Remove vehicles that reached destination
 	for car in platoon[2:]:
 		if not (car in allvehicles): # car not in simulation anymore
@@ -84,7 +84,7 @@ def platoon_maintenance(platoon, accTau, accMinGap, allvehicles):
 		return -1
 	
 	if len(platoon) < 4: # only one vehicle in platoon
-		make_unplatooned(platoon[2], accTau, accMinGap)
+		make_unplatooned(platoon[2], caccTau, caccMinGap)
 		settings.platoons.remove(platoon)
 		return -1
 			
@@ -94,12 +94,12 @@ def platoon_maintenance(platoon, accTau, accMinGap, allvehicles):
 	if (curr_lane != platoon[0]) and (curr_lane != platoon[1]) and (curr_lane[:-1] == platoon[1][:-1]):
 		# the leader switched lanes within the same road segment, so remove it as leader
 		platoon.remove(leader)
-		make_unplatooned(leader, accTau, accMinGap)
+		make_unplatooned(leader, caccTau, caccMinGap)
 		# Configure the new leader
 		leader = platoon[2]
 		curr_lane = traci.vehicle.getLaneID(leader)
-		traci.vehicle.setMinGap(leader, accMinGap)
-		traci.vehicle.setTau(leader, accTau)
+		traci.vehicle.setMinGap(leader, caccMinGap)
+		traci.vehicle.setTau(leader, caccTau)
 		traci.vehicle.setColor(leader, (0,255,255,0))
 	
 	if (curr_lane != platoon[0]) and (curr_lane != platoon[1]) and (":" not in curr_lane):
@@ -129,12 +129,12 @@ def platoon_maintenance(platoon, accTau, accMinGap, allvehicles):
 			# checks leading vehicle but also whether it's this car's lane which changed -> if it has simply remove it
 			if not (curr_leading in platoon) and (curr_lane != platoon[0]) and (curr_lane != platoon[1]):
 				platoon.remove(car)
-				make_unplatooned(car, accTau, accMinGap)
+				make_unplatooned(car, caccTau, caccMinGap)
 			
 			# if the lane has not changed, it's the leader that has moved, so make this car the new leader of a new platoon
 			if not (curr_leading in platoon) and ((curr_lane == platoon[0]) or (curr_lane == platoon[1])):
-				traci.vehicle.setMinGap(car, accMinGap)
-				traci.vehicle.setTau(car, accTau)
+				traci.vehicle.setMinGap(car, caccMinGap)
+				traci.vehicle.setTau(car, caccTau)
 				if index >= len(platoon): # this is the last vehicle in platoon, so don't make a  new platoon
 					traci.vehicle.setColor(car, (0,255,0,0))
 					settings.platoonedvehicles.remove(car)
@@ -158,14 +158,14 @@ def platoon_maintenance(platoon, accTau, accMinGap, allvehicles):
 					if (curr_lane != lane1) and (curr_lane != lane2) and (curr_lane[:-1] == platoon[1][:-1]): # vehicle just changed lane
 					# car has switched lanes or reached a new road
 							platoon.remove(car)
-							make_unplatooned(car, accTau, accMinGap) # remove car and revert it to regular ACC
+							make_unplatooned(car, caccTau, caccMinGap) # remove car and revert it to regular ACC
 				
 					elif (curr_lane != lane1) and (curr_lane != lane2) and (":" not in curr_lane): # vehicles are lagging behind or branched out, split platoon
 						# car has switched lanes or reached a new road
 							platoon.remove(car)
 							settings.platoonedvehicles.remove(car)
-							traci.vehicle.setMinGap(car, accMinGap)
-							traci.vehicle.setTau(car, accTau)
+							traci.vehicle.setMinGap(car, caccMinGap)
+							traci.vehicle.setTau(car, caccTau)
 							traci.vehicle.setColor(car, (0,255,255,0))
 							
 							leader_route = traci.vehicle.getRoute(car)
@@ -181,14 +181,14 @@ def platoon_maintenance(platoon, accTau, accMinGap, allvehicles):
 							break	
 	# If platoon is gone, delete it
 	if len(platoon) < 4:
-		make_unplatooned(leader, accTau, accMinGap)
+		make_unplatooned(leader, caccTau, caccMinGap)
 		settings.platoons.remove(platoon)
 		return -1
 	
 	# make sure leader has correct parameters --> this should not be necessary, check back on code to see where bug is but it does fix it technically
         # DAVID COMMENTED THESE LAST 3 LINES OUT - TO MAKE LEADER NOT FOLLOW SO CLOSELY!!
-	traci.vehicle.setMinGap(platoon[2], accMinGap)
-	traci.vehicle.setTau(platoon[2], accTau)
+	traci.vehicle.setMinGap(platoon[2], caccMinGap)
+	traci.vehicle.setTau(platoon[2], caccTau)
 	traci.vehicle.setColor(platoon[2], (0,255,255,0))
 	return 0
 
@@ -198,7 +198,7 @@ def platoon_maintenance(platoon, accTau, accMinGap, allvehicles):
 #   This function creates platoons in a given road segment and cycle time  
 #   interval
 ################################################################################
-def create_platoons(road, lane, start_range, end_range, accTau, accMinGap, targetTau, targetMinGap, programPointer):
+def create_platoons(road, lane, start_range, end_range, caccTau, caccMinGap, targetTau, targetMinGap, programPointer):
 	road_segment = road + lane;
 	if (programPointer >= start_range and programPointer <= end_range):
 		first = True # for leader in platoon
@@ -245,7 +245,7 @@ def create_platoons(road, lane, start_range, end_range, accTau, accMinGap, targe
 																			
 					# Leading car is not a leader, so continue  
 					if len(platoon) == 3: # if there was a single ACC vehicle
-						make_unplatooned(platoon[2], accTau, accMinGap)
+						make_unplatooned(platoon[2], caccTau, caccMinGap)
 					if len(platoon) > 3: # if there were multiple ACC vehicles
 						settings.platoons.append(platoon) # add the platoon
 						platoon = [road_segment]
@@ -286,7 +286,7 @@ def create_platoons(road, lane, start_range, end_range, accTau, accMinGap, targe
 			# if it is manual, stop making the platoon, since no cars behind can accelerate anyways
 			else:
 				if len(platoon) == 3: # if there was a single ACC vehicles
-					make_unplatooned(platoon[2], accTau, accMinGap)
+					make_unplatooned(platoon[2], caccTau, caccMinGap)
 				if len(platoon) > 3: # if there were multiple ACC vehicles
 					settings.platoons.append(platoon) # add the platoon
 				first = True
@@ -335,10 +335,10 @@ def make_platooned(veh, targetTau, targetMinGap):
 # Make Unplatooned function
 #   Remove vehicles from being platooned
 ################################################################################
-def make_unplatooned(veh, accTau, accMinGap):
+def make_unplatooned(veh, caccTau, caccMinGap):
 	if veh in settings.platoonedvehicles: # shouldn't be necessary
 		settings.platoonedvehicles.remove(veh)
-	traci.vehicle.setMinGap(veh, accMinGap)
-	traci.vehicle.setTau(veh, accTau)
+	traci.vehicle.setMinGap(veh, caccMinGap)
+	traci.vehicle.setTau(veh, caccTau)
 	traci.vehicle.setColor(veh, (0,255,0,0))
 	traci.vehicle.setSpeedFactor(veh, 1.0) 	# allow it to speed up to close gaps
