@@ -91,7 +91,7 @@ Also recommended: paste this line, which will allow you to run SUMO from the com
 export PATH=$\$$PATH:$\$$HOME/sumo/sumo-0.30.0/bin
 \end{lstlisting}
 
-\subsection{Running Examples}
+\section{Running Examples}
 There are Python scripts that run each example, each with a name that starts with "runner" and ends with ".py". These files can be executed directly if you change the file access permissions to add executability.
 \begin{lstlisting}
 chmod +x runner.py
@@ -123,8 +123,23 @@ from platoon_functions import *
 \end{lstlisting}
 to be below that try/except statement. This should resolve the error and allow traci to be imported in the platoon\textunderscore functions module. 
 
-\section{Conclusion}
-``I always thought something was fundamentally wrong with the universe'' \citep{adams1995hitchhiker}
+\section{Modifications to Platoon Functions}
+In order to accomodate the notation of ACC and CACC enabled vehicles (REALLY PUT REFERENCE HERE), I have changed the platooning vehicle type to be CarCACC rather than CarA, which is a little misleading since this can refer to simply adaptive cruise control. This makes defining vehicle types in the route xml file more intuitive - as we can now have "CarACC," "CarCACC," and "CarM" without the old ambiguous "CarA." This can all be changed easily.  
+
+
+\section{Questions/To Do}
+\subsection{Questions}
+\begin{itemize}
+	\item Papers in Github repo? 
+	\item how to start distributing cars to measure throughput
+\end{itemize}
+
+\subsection{To Do}
+\begin{itemize}
+	\item Python script to make cars leave/run trials of different distributions
+	\item Python script to look at throughput measurements
+\end{itemize}
+
 
 \bibliographystyle{plain}
 \bibliography{references}
