@@ -86,7 +86,7 @@ def run(run_time):
         caccTau     = 0.1; caccMinGap   = 2.0;
 
         if platooning and (step % platoon_check == 0):
-            create_platoons("gneE2", "_0", 0, run_time*(1/settings.step_length), caccTau, caccMinGap, targetTau, targetMinGap, programPointer)
+            create_platoons("gneE2", "_0", 0, 1e10, caccTau, caccMinGap, targetTau, targetMinGap, programPointer)
 
         ## PLATOON CONTROL
         if platooning and (step % platoon_comm == 0):
@@ -136,7 +136,7 @@ if __name__ == "__main__":
     else:
         sumoBinary = checkBinary('sumo-gui')
 
-    run_times = np.multiply([60],60)
+    run_times = np.multiply([20],60)
     output = []
     for x in run_times:
 
