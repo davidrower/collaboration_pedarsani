@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <routes>
   <vTypeDistribution id="typedist1">
-    <vType id="CarCACC" length="5.0" color="0,1,0"     accel="2.6" decel="4.5" tau="2.05" stepping="1.0" sigma="0.0" impatience="0.0" minGap="4.0" maxSpeed="70.0" probability="0.5"/>
-    <vType id="CarACC"  length="5.0" color="0.5,0.5,0" accel="2.6" decel="4.5" tau="0.85" stepping="1.0" sigma="0.0" impatience="0.0" minGap="1.0" maxSpeed="70.0" probability="0.0"/>
-    <vType id="CarM"    length="5.0" color="1,0,0"     accel="2.6" decel="4.5" tau="2.05" stepping="1.0" sigma="0.0" impatience="0.0" minGap="4.0" maxSpeed="70.0" probability="0.5"/>
+    <vType id="CarCACC" length="5.0" color="0,1,0"     accel="4.6" decel="4.5" tau="2.05" stepping="1.0" sigma="0.0" impatience="0.0" minGap="4.0" maxSpeed="70.0" probability="0.5"/>
+    <vType id="CarACC"  length="5.0" color="0.5,0.5,0" accel="4.6" decel="4.5" tau="0.85" stepping="1.0" sigma="0.0" impatience="0.0" minGap="1.0" maxSpeed="70.0" probability="0.0"/>
+    <vType id="CarM"    length="5.0" color="1,0,0"     accel="4.6" decel="4.5" tau="2.05" stepping="1.0" sigma="0.0" impatience="0.0" minGap="4.0" maxSpeed="70.0" probability="0.5"/>
   </vTypeDistribution>
 
   <route id="1" edges="gneE2"/>
-  <flow  id="type1" begin="0" end= "50000" period=".1" type="typedist1">
+  <flow  id="type1" begin="0" end= "50000" period="1" type="typedist1">
     <route edges="gneE2"/>
   </flow>
   

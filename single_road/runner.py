@@ -32,10 +32,7 @@ from platoon_functions_modified import *
 import traci
 PORT = 8873 # the port used for communicating with your sumo instance
 
-platooning    = True
-run_time      = 60*60# seconds*minutes
-tau_effective = lambda x: 1.0 + (5.0 + 1.0)/x #effective tau is sumo_tau + (lengthOfCar + minGap)/avgSpeed, on this lane, avgSpeed is 30m/s and from rou.xml, lengthOfCar = 5, minGap = 0.5, sumo_tau = 1
-
+platooning = True
 
 # Runs the simulation, and allows you to change traffic phase
 def run(run_time):
@@ -45,16 +42,20 @@ def run(run_time):
     step          = 0
     flow_count    = 0
     first_car     = True
+    throughput_window = 1000
+    prev_count    = 0
     prev_veh_id   = ' '
     leaving_times = []
     car_speeds    = []
-    
+
     ## Platoons Settings
     platoon_check = 50; # how often platoons update and are checked, every X ticks
     platoon_comm = 20; # how often platoons communicate, every X ticks
     numplatoons = 0;
 
-
+    ## Computing throughput 
+    throughput_vec = []
+    
     while traci.simulation.getMinExpectedNumber() > 0 and step <= run_time*(1/settings.step_length): 
         traci.simulationStep() # advance a simulation step
 
@@ -65,9 +66,8 @@ def run(run_time):
         if len(sensor_data) != 0:
             if first_car: #if its the first car, record the time that it comes in
                 first_time = sensor_data[0][2]
-                print first_time
-                first_car = False
-
+                first_car  = False
+                #print first_time, step
 
             veh_id = sensor_data[0][0]
             if veh_id != prev_veh_id: #if the vehicle coming in has a different id than the previous vehicle, count it towards total flow
@@ -81,9 +81,9 @@ def run(run_time):
 
         ## PLATOON CREATION
         # Creates platoons if active, one line for each intersection and road segment.
-        start_range = 1;   end_range    = 120;
-        targetTau   = 0.1; targetMinGap = 2.0;
-        caccTau     = 0.1; caccMinGap   = 2.0;
+        start_range = 1;    end_range    = 120;
+        targetTau   = 0.1;  targetMinGap = 2.0;
+        caccTau     = 2.05; caccMinGap   = 4.0;
 
         if platooning and (step % platoon_check == 0):
             create_platoons("gneE2", "_0", 0, 1e10, caccTau, caccMinGap, targetTau, targetMinGap, programPointer)
@@ -92,9 +92,19 @@ def run(run_time):
         if platooning and (step % platoon_comm == 0):
             platoon_control(caccTau, caccMinGap, targetTau, targetMinGap, platoon_comm)
 
+        ## MY THROUGHPUT ANALYSIS - DAVID 
+        if step % throughput_window == 0:
+            if prev_count > 0:
+                throughput_vec.append((flow_count - prev_count)/(throughput_window * settings.step_length))
+            prev_count = flow_count
+
         step  += 1
-        #print str(step)
    
+    print "Throughput Vector:"
+    print "Mean:", np.mean(throughput_vec)
+    print "STD:", np.std(throughput_vec)
+     
+    '''
     print "\n \n"
     print "-------------------------------------------------------- \n"
     print "Total number of cars that have passed: " + str(flow_count)
@@ -109,12 +119,11 @@ def run(run_time):
     print "Mean tau: " + str(np.mean(tau)) + "\n"
     print "Var tau: " + str(np.var(tau)) + "\n"
     print "Standard Dev tau: " + str(np.std(tau)) +"\n"
-
+    '''
+    
     traci.close()
     sys.stdout.flush()
-    return [np.mean(tau),np.var(tau),np.std(tau)]
-
-
+    return [np.mean(throughput_vec),np.var(throughput_vec),np.std(throughput_vec)]
 
 #get_options function for SUMO
 def get_options():
@@ -124,6 +133,8 @@ def get_options():
     options, args = optParser.parse_args()
     return options
 
+def changeRouteFile(alpha, route): 
+    pass
 
 # this is the main entry point of this script
 if __name__ == "__main__":
@@ -136,21 +147,23 @@ if __name__ == "__main__":
     else:
         sumoBinary = checkBinary('sumo-gui')
 
-    run_times = np.multiply([20],60)
-    output = []
+    run_times = np.multiply([20,20],60)
+    alpha     = 0.5
+    path      = "/asdf"
+    output    = []
     for x in run_times:
-
-    # this is the normal way of using traci. sumo is started as a
-    # subprocess and then the python script connects and runs
+        # this is the normal way of using traci. sumo is started as a
+        # subprocess and then the python script connects and runs
+        settings.init()
+        changeRouteFile(alpha, path)
         sumoProcess = subprocess.Popen([sumoBinary, "-c", "./network/single.sumocfg.xml","--step-length", str(settings.step_length), "--remote-port", str(PORT)], stdout=sys.stdout, stderr=sys.stderr)
-
-
         output.append(run(x))
+        #sumoProcess.wait()
+        sumoProcess.kill()
+    
+    #print output
 
-        sumoProcess.wait()
-
-    print output
-
+    '''
     means = [item[0] for item in output]
     stdevs = [item[2] for item in output]
     plt.errorbar(np.divide(run_times,60), means, yerr=stdevs, fmt = 'o',label = 'Measured')
@@ -161,4 +174,4 @@ if __name__ == "__main__":
     plt.title('Theoretical Tau vs Measured Tau in simulations of varying length')
     plt.axis([run_times[0]/60-10, run_times[-1]/60+10, 1, 1.5])
     plt.show()
-
+    '''
