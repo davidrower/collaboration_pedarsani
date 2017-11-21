@@ -13,6 +13,8 @@ import math
 import numpy as np
 import scipy.io
 
+import xml.etree.ElementTree as ET
+
 import settings
 settings.init()
 
@@ -81,12 +83,12 @@ def run(run_time):
 
         ## PLATOON CREATION
         # Creates platoons if active, one line for each intersection and road segment.
-        start_range = 1;    end_range    = 120;
         targetTau   = 0.1;  targetMinGap = 2.0;
         caccTau     = 2.05; caccMinGap   = 4.0;
 
         if platooning and (step % platoon_check == 0):
-            create_platoons("gneE2", "_0", 0, 1e10, caccTau, caccMinGap, targetTau, targetMinGap, programPointer)
+            create_platoons("gneE2", "_0", 0, 1e10, caccTau, caccMinGap, 
+                            targetTau, targetMinGap, programPointer)
 
         ## PLATOON CONTROL
         if platooning and (step % platoon_comm == 0):
@@ -95,14 +97,16 @@ def run(run_time):
         ## MY THROUGHPUT ANALYSIS - DAVID 
         if step % throughput_window == 0:
             if prev_count > 0:
-                throughput_vec.append((flow_count - prev_count)/(throughput_window * settings.step_length))
+                curr  = flow_count - prev_count
+                curr /= throughput_window * settings.step_length
+                throughput_vec.append(curr)
             prev_count = flow_count
 
         step  += 1
    
-    print "Throughput Vector:"
-    print "Mean:", np.mean(throughput_vec)
-    print "STD:", np.std(throughput_vec)
+    #print "Throughput Vector:"
+    #print "Mean:", np.mean(throughput_vec)
+    #print "STD:", np.std(throughput_vec)
      
     '''
     print "\n \n"
@@ -123,7 +127,7 @@ def run(run_time):
     
     traci.close()
     sys.stdout.flush()
-    return [np.mean(throughput_vec),np.var(throughput_vec),np.std(throughput_vec)]
+    return [np.mean(throughput_vec),np.var(throughput_vec),np.std(throughput_vec), np.mean(car_speeds)]
 
 #get_options function for SUMO
 def get_options():
@@ -133,9 +137,28 @@ def get_options():
     options, args = optParser.parse_args()
     return options
 
-def changeRouteFile(alpha, route): 
-    pass
+def changeRouteFile(alpha, path):
+    tree = ET.parse(path)
+    root = tree.getroot()
+    for vType in root.iter('vType'):
+        if 'CACC' in vType.attrib['id']:
+            vType.attrib['probability'] = str(alpha)
+        elif 'M' in vType.attrib['id']: 
+            vType.attrib['probability'] = str(1-alpha)
+    tree.write(path)
+        
+def C_1(alpha, h_p, h_np, d, l):
+    """
+    Capacity model 1
+    """
+    return d / (alpha * h_p + (1 - alpha) * h_np + l)
 
+def C_2(alpha, h_p, h_np, d, l):
+    """
+    Capacity model 2
+    """
+    return d / (alpha ** 2 * h_p + (1 - alpha ** 2) * h_np + l)
+    
 # this is the main entry point of this script
 if __name__ == "__main__":
     options = get_options()
@@ -143,35 +166,45 @@ if __name__ == "__main__":
     # this script has been called from the command line. It will start sumo as a
     # server, then connect and run
     if (options.nogui):
-        sumoBinary = checkBinary('sumo-gui')
+        sumoBinary = checkBinary('sumo')
     else:
         sumoBinary = checkBinary('sumo-gui')
 
-    run_times = np.multiply([20,20],60)
-    alpha     = 0.5
-    path      = "/asdf"
+    alphas    = list(np.linspace(0,1,10))
+    run_time  = 10 * 60
+    path      = "./network/single.rou.xml"
+    if not os.path.exists(path): 
+        sys.exit('Cant find route file for sumo!')
     output    = []
-    for x in run_times:
+    for alpha in alphas:
+        print "---------------------------------------------------------------"
+        print "Running trial with alpha = %.3f" % alpha
         # this is the normal way of using traci. sumo is started as a
         # subprocess and then the python script connects and runs
         settings.init()
         changeRouteFile(alpha, path)
-        sumoProcess = subprocess.Popen([sumoBinary, "-c", "./network/single.sumocfg.xml","--step-length", str(settings.step_length), "--remote-port", str(PORT)], stdout=sys.stdout, stderr=sys.stderr)
-        output.append(run(x))
+        sumoProcess = subprocess.Popen([sumoBinary, "-c", "./network/single.sumocfg.xml",
+                                        "--step-length", str(settings.step_length), 
+                                        "--remote-port", str(PORT)], stdout=sys.stdout, 
+                                        stderr=sys.stderr)
+        output.append(run(run_time))
         #sumoProcess.wait()
         sumoProcess.kill()
     
-    #print output
-
-    '''
-    means = [item[0] for item in output]
+    print [x[0] for x in output]
+    
+    means  = [item[0] for item in output]
     stdevs = [item[2] for item in output]
-    plt.errorbar(np.divide(run_times,60), means, yerr=stdevs, fmt = 'o',label = 'Measured')
-    plt.plot(np.divide(run_times,60),np.multiply(np.ones(len(run_times)),(tau_effective(30))),'k-' , label = 'Theoretical')
-    plt.xlabel('Simulation Time (min)')
-    plt.ylabel('Tau (s)')
-    plt.legend()
-    plt.title('Theoretical Tau vs Measured Tau in simulations of varying length')
-    plt.axis([run_times[0]/60-10, run_times[-1]/60+10, 1, 1.5])
+    speeds = [item[3] for item in output]
+    print(speeds)
+    h_p, h_np, d, l = 2.0, 4.0, 3.3, 5.0
+    alphaSample = np.linspace(0,1,5)
+
+    plt.errorbar(alphas, means, yerr=stdevs, fmt = 'o',label = 'Measured')
+    plt.plot(alphaSample, C_1(alphaSample, h_p, h_np, d, l), 'k-' , label = 'Capacity Model 1')
+    plt.plot(alphaSample, C_2(alphaSample, h_p, h_np, d, l), 'k--' , label = 'Capacity Model 2')
+    plt.xlabel('alpha (autonomous proportion of traffic)')
+    plt.ylabel('Throughput (vehicles/timestep)')
+    plt.legend(loc=1)
+    plt.title('Throughput vs autonomy level of road')
     plt.show()
-    '''
