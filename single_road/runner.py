@@ -45,16 +45,17 @@ def run(run_time):
     flow_count1   = 0
     flow_count2   = 0
     first_car     = True
-    capacity_window = 1000
+    capacity_window = 100
     prev_veh_id1  = ' '
     prev_veh_id2  = ' '
     leaving_times = []
-    car_speeds    = []
+    car_speeds1   = []
+    car_speeds2   = []
 
     ## Platoons Settings
     platoon_check = 50; # how often platoons update and are checked, every X ticks
-    platoon_comm = 20; # how often platoons communicate, every X ticks
-    numplatoons = 0;
+    platoon_comm  = 10; # how often platoons communicate, every X ticks
+    numplatoons   = 0;
 
     ## Computing capacity 
     capacity_vec = []
@@ -76,22 +77,24 @@ def run(run_time):
             veh_id1 = sensor1_data[0][0]
             if veh_id1 != prev_veh_id1: #if the vehicle coming in has a different id than the previous vehicle, count it towards total flow
                 flow_count1 += 1
+                car_speeds1.append(traci.inductionloop.getLastStepMeanSpeed("sensor1"))
 
             if sensor1_data[0][3] != -1: #if the vehicle is leaving the sensor, record the time it left
                 leaving_times.append(sensor1_data[0][2])
+
             prev_veh_id1 = veh_id1
 
         if len(sensor2_data) != 0:
             veh_id2 = sensor2_data[0][0]
             if veh_id2 != prev_veh_id2: #if the vehicle coming in has a different id than the previous vehicle, count it towards total flow
                 flow_count2 += 1
-                car_speeds.append(traci.inductionloop.getLastStepMeanSpeed("sensor2"))
+                car_speeds2.append(traci.inductionloop.getLastStepMeanSpeed("sensor2"))
             prev_veh_id2 = veh_id2
 
         ## PLATOON CREATION
         # Creates platoons if active, one line for each intersection and road segment.
-        targetTau   = 0.3;  targetMinGap = 2.0;
-        caccTau     = 2.05; caccMinGap   = 4.0;
+        targetTau   = 3.0; targetMinGap = 4.0;
+        caccTau     = 3.0; caccMinGap   = 4.0;
 
         if platooning and (step % platoon_check == 0):
             create_platoons("gneE2", "_0", 0, 1e10, caccTau, caccMinGap, 
@@ -109,7 +112,6 @@ def run(run_time):
 
         step  += 1
    
-     
     '''
     print "-------------------------------------------------------- \n"
     print "Total number of cars that have passed: " + str(flow_count)
@@ -130,7 +132,9 @@ def run(run_time):
     print "Capacity Vector:"
     print "Mean:", np.mean(capacity_vec)
     print "STD:", np.std(capacity_vec)
-    print "Mean, std speed: %f, %f" % (np.mean(car_speeds), np.std(car_speeds)) + "\n"
+    #print "Mean, std speed: %f, %f" % (np.mean(car_speeds), np.std(car_speeds)) + "\n"
+    print "Speeds Vector Stats 1", np.mean(car_speeds1), np.std(car_speeds1), "\n"
+    print "Speeds Vector Stats 2", np.mean(car_speeds2), np.std(car_speeds2), "\n"
     traci.close()
     sys.stdout.flush()
     return [np.mean(capacity_vec),np.var(capacity_vec),np.std(capacity_vec)]
@@ -176,13 +180,15 @@ if __name__ == "__main__":
     else:
         sumoBinary = checkBinary('sumo')
 
-    alphas    = list(np.linspace(0,1,5))
+    alphas    = list(np.linspace(0.0, 1, 10))
+    #alphas    = list(np.arange(0.95, 1.0, 0.01))
     run_time  = 10 * 60
     path      = "./network/single.rou.xml"
     if not os.path.exists(path): 
         sys.exit('Cant find route file for sumo!')
     output    = []
     for alpha in alphas:
+        print "\n"
         print "---------------------------------------------------------------"
         print "Running trial with alpha = %.3f" % alpha
         # this is the normal way of using traci. sumo is started as a
@@ -197,15 +203,16 @@ if __name__ == "__main__":
         #sumoProcess.wait()
         sumoProcess.kill()
     
+    print "\n"
     print [x[0] for x in output]
     
     means  = [item[0] for item in output]
-    stdevs = [item[2] for item in output]
-    h_np = 2.05 * 10.0 # tau_platoon * speed limit of road
-    h_p  = 0.3  * 10.0  # tau_manual  * speed limit of road
-    d, l = 500., 5.0    # distance between sensors, length of cars
+    stdevs = [item[1] for item in output]
+    h_np = 3.0 * 10.0  # tau_platoon * speed limit of road
+    h_p  = 3.0 * 10.0  # tau_manual  * speed limit of road
+    d, l = 600., 5.0   # distance between sensors, length of cars
     alphaSample = np.linspace(0,1,20)
-
+    print alphaSample, C_2(alphaSample, h_p, h_np, d, l)
     plt.errorbar(alphas, means, yerr=stdevs, fmt = 'o',label = 'Measured')
     plt.plot(alphaSample, C_1(alphaSample, h_p, h_np, d, l), 'k-' ,  label = 'Capacity Model 1')
     plt.plot(alphaSample, C_2(alphaSample, h_p, h_np, d, l), 'k--' , label = 'Capacity Model 2')

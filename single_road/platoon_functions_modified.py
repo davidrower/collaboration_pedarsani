@@ -49,6 +49,11 @@ def platoon_control(caccTau, caccMinGap, targetTau, targetMinGap, platoon_comm):
 			leader_accel = 0
 		target_speed = traci.lane.getMaxSpeed(traci.vehicle.getLaneID(leader))
 		
+                # DAVIDS ADDITION 
+                if leader_speed  > target_speed:
+			traci.vehicle.slowDown(leader, target_speed, settings.step_length*platoon_comm) # slows down the vehicle for the appropriate period
+                # END MY ADDITION 
+
 		if (leader_accel < -1.0) or (leader_speed < target_speed):
 			for car in platoon[3:]: # go through all followers and have them slow down accordingly
 				leading_temp = traci.vehicle.getLeader(car, 100)

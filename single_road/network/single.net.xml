@@ -19,13 +19,13 @@
 
 <net version="0.27" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
 
-    <location netOffset="0.00,0.00" convBoundary="0,0,1000,0" origBoundary="10000000000.00,10000000000.00,-10000000000.00,-10000000000.00" projParameter="!"/>
+    <location netOffset="0.00,0.00" convBoundary="0,0,2000,0" origBoundary="10000000000.00,10000000000.00,-10000000000.00,-10000000000.00" projParameter="!"/>
 
     <edge id="gneE2" from="gneJ3" to="gneJ4" priority="1">
-        <lane id="gneE2_0" index="0" speed="10.0" length="1000" shape="0,0 1000,5"/>
+        <lane id="gneE2_0" index="0" speed="10.0" length="2000" shape="0,0 2000,5"/>
     </edge>
 
     <junction id="gneJ3" type="dead_end" x="0" y="0"    incLanes=""        intLanes="" shape="0,0 1,5"/>
-    <junction id="gneJ4" type="dead_end" x="1000" y="0" incLanes="gneE2_0" intLanes="" shape="999.9,0 1000,5"/>
+    <junction id="gneJ4" type="dead_end" x="2000" y="0" incLanes="gneE2_0" intLanes="" shape="1999.9,0 2000,5"/>
 
 </net>
