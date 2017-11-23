@@ -1,3 +1,4 @@
 <additionals>
-    <e1Detector id="sensor" lane="gneE2_0" pos="1900" freq="1.00" file="sensor.out" splitByType="0"/>
+    <e1Detector id="sensor1" lane="gneE2_0" pos="300" freq="1.00" file="sensor1.out" splitByType="0"/>
+    <e1Detector id="sensor2" lane="gneE2_0" pos="800" freq="1.00" file="sensor2.out" splitByType="0"/>
 </additionals>

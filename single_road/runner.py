@@ -42,11 +42,12 @@ def run(run_time):
     traci.init(PORT)
     programPointer = 0 # initiates at start # len(PROGRAM) - 1 # initiates at end
     step          = 0
-    flow_count    = 0
+    flow_count1   = 0
+    flow_count2   = 0
     first_car     = True
-    throughput_window = 1000
-    prev_count    = 0
-    prev_veh_id   = ' '
+    capacity_window = 1000
+    prev_veh_id1  = ' '
+    prev_veh_id2  = ' '
     leaving_times = []
     car_speeds    = []
 
@@ -55,35 +56,41 @@ def run(run_time):
     platoon_comm = 20; # how often platoons communicate, every X ticks
     numplatoons = 0;
 
-    ## Computing throughput 
-    throughput_vec = []
+    ## Computing capacity 
+    capacity_vec = []
     
     while traci.simulation.getMinExpectedNumber() > 0 and step <= run_time*(1/settings.step_length): 
         traci.simulationStep() # advance a simulation step
 
         programPointer = step*int(1/settings.step_length)
 
-        sensor_data = traci.inductionloop.getVehicleData("sensor")
+        sensor1_data = traci.inductionloop.getVehicleData("sensor1")
+        sensor2_data = traci.inductionloop.getVehicleData("sensor2")
 
-        if len(sensor_data) != 0:
+        if len(sensor1_data) != 0:
             if first_car: #if its the first car, record the time that it comes in
-                first_time = sensor_data[0][2]
+                first_time = sensor1_data[0][2]
                 first_car  = False
                 #print first_time, step
+            
+            veh_id1 = sensor1_data[0][0]
+            if veh_id1 != prev_veh_id1: #if the vehicle coming in has a different id than the previous vehicle, count it towards total flow
+                flow_count1 += 1
 
-            veh_id = sensor_data[0][0]
-            if veh_id != prev_veh_id: #if the vehicle coming in has a different id than the previous vehicle, count it towards total flow
-                flow_count += 1
-                car_speeds.append(traci.inductionloop.getLastStepMeanSpeed("sensor"))
+            if sensor1_data[0][3] != -1: #if the vehicle is leaving the sensor, record the time it left
+                leaving_times.append(sensor1_data[0][2])
+            prev_veh_id1 = veh_id1
 
-
-            if sensor_data[0][3] != -1: #if the vehicle is leaving the sensor, record the time it left
-                leaving_times.append(sensor_data[0][2])
-            prev_veh_id = veh_id
+        if len(sensor2_data) != 0:
+            veh_id2 = sensor2_data[0][0]
+            if veh_id2 != prev_veh_id2: #if the vehicle coming in has a different id than the previous vehicle, count it towards total flow
+                flow_count2 += 1
+                car_speeds.append(traci.inductionloop.getLastStepMeanSpeed("sensor2"))
+            prev_veh_id2 = veh_id2
 
         ## PLATOON CREATION
         # Creates platoons if active, one line for each intersection and road segment.
-        targetTau   = 0.1;  targetMinGap = 2.0;
+        targetTau   = 0.3;  targetMinGap = 2.0;
         caccTau     = 2.05; caccMinGap   = 4.0;
 
         if platooning and (step % platoon_check == 0):
@@ -94,22 +101,16 @@ def run(run_time):
         if platooning and (step % platoon_comm == 0):
             platoon_control(caccTau, caccMinGap, targetTau, targetMinGap, platoon_comm)
 
-        ## MY THROUGHPUT ANALYSIS - DAVID 
-        if step % throughput_window == 0:
-            if prev_count > 0:
-                curr  = flow_count - prev_count
-                curr /= throughput_window * settings.step_length
-                throughput_vec.append(curr)
-            prev_count = flow_count
+        ## MY CAPACITY ANALYSIS - DAVID 
+        if step % capacity_window == 0:
+            if flow_count2 > 0:
+                curr  = flow_count1 - flow_count2
+                capacity_vec.append(curr)
 
         step  += 1
    
-    #print "Throughput Vector:"
-    #print "Mean:", np.mean(throughput_vec)
-    #print "STD:", np.std(throughput_vec)
      
     '''
-    print "\n \n"
     print "-------------------------------------------------------- \n"
     print "Total number of cars that have passed: " + str(flow_count)
     tau = np.diff(leaving_times)
@@ -125,15 +126,20 @@ def run(run_time):
     print "Standard Dev tau: " + str(np.std(tau)) +"\n"
     '''
     
+    print "\n \n"
+    print "Capacity Vector:"
+    print "Mean:", np.mean(capacity_vec)
+    print "STD:", np.std(capacity_vec)
+    print "Mean, std speed: %f, %f" % (np.mean(car_speeds), np.std(car_speeds)) + "\n"
     traci.close()
     sys.stdout.flush()
-    return [np.mean(throughput_vec),np.var(throughput_vec),np.std(throughput_vec), np.mean(car_speeds)]
+    return [np.mean(capacity_vec),np.var(capacity_vec),np.std(capacity_vec)]
 
 #get_options function for SUMO
 def get_options():
     optParser = optparse.OptionParser()
-    optParser.add_option("--nogui", action="store_true",
-                         default=True, help="run the commandline version of sumo")
+    optParser.add_option("--gui", action="store_true",
+                         default=False, help="run the commandline version of sumo")
     options, args = optParser.parse_args()
     return options
 
@@ -165,12 +171,12 @@ if __name__ == "__main__":
 
     # this script has been called from the command line. It will start sumo as a
     # server, then connect and run
-    if (options.nogui):
-        sumoBinary = checkBinary('sumo')
-    else:
+    if (options.gui):
         sumoBinary = checkBinary('sumo-gui')
+    else:
+        sumoBinary = checkBinary('sumo')
 
-    alphas    = list(np.linspace(0,1,10))
+    alphas    = list(np.linspace(0,1,5))
     run_time  = 10 * 60
     path      = "./network/single.rou.xml"
     if not os.path.exists(path): 
@@ -195,16 +201,15 @@ if __name__ == "__main__":
     
     means  = [item[0] for item in output]
     stdevs = [item[2] for item in output]
-    speeds = [item[3] for item in output]
-    print(speeds)
-    h_p, h_np, d, l = 2.0, 4.0, 3.3, 5.0
-    alphaSample = np.linspace(0,1,5)
+    h_np = 2.05 * 10.0 # tau_platoon * speed limit of road
+    h_p  = 0.3  * 10.0  # tau_manual  * speed limit of road
+    d, l = 500., 5.0    # distance between sensors, length of cars
+    alphaSample = np.linspace(0,1,20)
 
     plt.errorbar(alphas, means, yerr=stdevs, fmt = 'o',label = 'Measured')
-    plt.plot(alphaSample, C_1(alphaSample, h_p, h_np, d, l), 'k-' , label = 'Capacity Model 1')
+    plt.plot(alphaSample, C_1(alphaSample, h_p, h_np, d, l), 'k-' ,  label = 'Capacity Model 1')
     plt.plot(alphaSample, C_2(alphaSample, h_p, h_np, d, l), 'k--' , label = 'Capacity Model 2')
     plt.xlabel('alpha (autonomous proportion of traffic)')
-    plt.ylabel('Throughput (vehicles/timestep)')
-    plt.legend(loc=1)
-    plt.title('Throughput vs autonomy level of road')
+    plt.ylabel('Capacity')
+    plt.title('Capacity vs autonomy level of road')
     plt.show()
