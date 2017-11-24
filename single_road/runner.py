@@ -37,7 +37,7 @@ PORT = 8873 # the port used for communicating with your sumo instance
 platooning = True
 
 # Runs the simulation, and allows you to change traffic phase
-def run(run_time):
+def run(run_time, tau_p, tau_np):
     ## execute the TraCI control loop
     traci.init(PORT)
     programPointer = 0 # initiates at start # len(PROGRAM) - 1 # initiates at end
@@ -45,7 +45,7 @@ def run(run_time):
     flow_count1   = 0
     flow_count2   = 0
     first_car     = True
-    capacity_window = 100
+    capacity_window = 50
     prev_veh_id1  = ' '
     prev_veh_id2  = ' '
     leaving_times = []
@@ -93,8 +93,8 @@ def run(run_time):
 
         ## PLATOON CREATION
         # Creates platoons if active, one line for each intersection and road segment.
-        targetTau   = 2.0; targetMinGap = 4.0;
-        caccTau     = 3.0; caccMinGap   = 4.0;
+        targetTau   = tau_p; targetMinGap = 4.0;
+        caccTau    = tau_np; caccMinGap   = 4.0;
 
         if platooning and (step % platoon_check == 0):
             create_platoons("gneE2", "_0", 0, 1e10, caccTau, caccMinGap, 
@@ -180,13 +180,22 @@ if __name__ == "__main__":
     else:
         sumoBinary = checkBinary('sumo')
 
-    alphas    = list(np.linspace(0.0, 1, 10))
+    alphas    = list(np.linspace(0.0, 1, 20))
     #alphas    = list(np.arange(0.95, 1.0, 0.01))
     run_time  = 10 * 60
     path      = "./network/single.rou.xml"
     if not os.path.exists(path): 
         sys.exit('Cant find route file for sumo!')
     output    = []
+
+    tau_p  = 2.0
+    tau_np = 3.0
+    max_speed = 13.00
+    min_gap   = 4.0
+    h_p  = tau_p  * max_speed + min_gap # tau_platoon * speed limit of road + minGap
+    h_np = tau_np * max_speed + min_gap # tau_manual  * speed limit of road + minGap
+    d, l = 3500., 5.0         # distance between sensors, length of cars
+
     for alpha in alphas:
         print "\n"
         print "---------------------------------------------------------------"
@@ -199,7 +208,7 @@ if __name__ == "__main__":
                                         "--step-length", str(settings.step_length), 
                                         "--remote-port", str(PORT)], stdout=sys.stdout, 
                                         stderr=sys.stderr)
-        output.append(run(run_time))
+        output.append(run(run_time, tau_p, tau_np))
         #sumoProcess.wait()
         sumoProcess.kill()
     
@@ -208,9 +217,6 @@ if __name__ == "__main__":
     
     means  = [item[0] for item in output]
     stdevs = [item[1] for item in output]
-    h_np = 3.0 * 10.0 + 4.  # tau_platoon * speed limit of road + minGap
-    h_p  = 2.0 * 10.0 + 4.  # tau_manual  * speed limit of road + minGap
-    d, l = 3500., 5.0   # distance between sensors, length of cars
     alphaSample = np.linspace(0,1,20)
     print alphaSample, C_2(alphaSample, h_p, h_np, d, l)
     plt.errorbar(alphas, means, yerr=stdevs, fmt = 'o',label = 'Measured')
@@ -219,5 +225,5 @@ if __name__ == "__main__":
     plt.xlabel('Alpha (Autonomous proportion of traffic)')
     plt.ylabel('Capacity')
     plt.title('Capacity vs Autonomy Level of Road')
-    plt.show()
     plt.savefig("capacity.pdf")
+    plt.show()
