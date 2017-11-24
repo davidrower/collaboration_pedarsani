@@ -93,7 +93,7 @@ def run(run_time):
 
         ## PLATOON CREATION
         # Creates platoons if active, one line for each intersection and road segment.
-        targetTau   = 3.0; targetMinGap = 4.0;
+        targetTau   = 2.0; targetMinGap = 4.0;
         caccTau     = 3.0; caccMinGap   = 4.0;
 
         if platooning and (step % platoon_check == 0):
@@ -208,15 +208,16 @@ if __name__ == "__main__":
     
     means  = [item[0] for item in output]
     stdevs = [item[1] for item in output]
-    h_np = 3.0 * 10.0  # tau_platoon * speed limit of road
-    h_p  = 3.0 * 10.0  # tau_manual  * speed limit of road
-    d, l = 600., 5.0   # distance between sensors, length of cars
+    h_np = 3.0 * 10.0 + 4.  # tau_platoon * speed limit of road + minGap
+    h_p  = 2.0 * 10.0 + 4.  # tau_manual  * speed limit of road + minGap
+    d, l = 3500., 5.0   # distance between sensors, length of cars
     alphaSample = np.linspace(0,1,20)
     print alphaSample, C_2(alphaSample, h_p, h_np, d, l)
     plt.errorbar(alphas, means, yerr=stdevs, fmt = 'o',label = 'Measured')
     plt.plot(alphaSample, C_1(alphaSample, h_p, h_np, d, l), 'k-' ,  label = 'Capacity Model 1')
     plt.plot(alphaSample, C_2(alphaSample, h_p, h_np, d, l), 'k--' , label = 'Capacity Model 2')
-    plt.xlabel('alpha (autonomous proportion of traffic)')
+    plt.xlabel('Alpha (Autonomous proportion of traffic)')
     plt.ylabel('Capacity')
-    plt.title('Capacity vs autonomy level of road')
+    plt.title('Capacity vs Autonomy Level of Road')
     plt.show()
+    plt.savefig("capacity.pdf")
