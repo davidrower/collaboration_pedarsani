@@ -50,8 +50,8 @@ def platoon_control(caccTau, caccMinGap, targetTau, targetMinGap, platoon_comm):
 		target_speed = traci.lane.getMaxSpeed(traci.vehicle.getLaneID(leader))
 		
                 # DAVIDS ADDITION 
-                if leader_speed  > target_speed:
-			traci.vehicle.slowDown(leader, target_speed, settings.step_length*platoon_comm) # slows down the vehicle for the appropriate period
+                #if leader_speed  > target_speed:
+		#	traci.vehicle.slowDown(leader, target_speed, settings.step_length*platoon_comm) # slows down the vehicle for the appropriate period
                 # END MY ADDITION 
 
 		if (leader_accel < -1.0) or (leader_speed < target_speed):

@@ -1,7 +1,7 @@
 <routes>
   <vTypeDistribution id="typedist1">
-    <vType accel="6.6" carFollowModel="Krauss" color="0,1,0" decel="6.5" id="CarCACC" impatience="0.0" length="5.0" maxSpeed="40.0" minGap="4.0" probability="1.0" sigma="0.0" stepping="1.0" tau="3.0" />
-    <vType accel="6.6" carFollowModel="Krauss" color="1,0,0" decel="6.5" id="CarM" impatience="0.0" length="5.0" maxSpeed="40.0" minGap="4.0" probability="0.0" sigma="0.0" stepping="1.0" tau="3.0" />
+    <vType accel="6.6" carFollowModel="Krauss" color="0,1,0" decel="6.5" id="CarCACC" impatience="0.0" length="5.0" maxSpeed="40.0" minGap="3.0" probability="1.0" sigma="0.0" stepping="1.0" tau="3.0" />
+    <vType accel="6.6" carFollowModel="Krauss" color="1,0,0" decel="6.5" id="CarM" impatience="0.0" length="5.0" maxSpeed="40.0" minGap="3.0" probability="0.0" sigma="0.0" stepping="1.0" tau="3.0" />
     <vType accel="4.6" color="0.5,0.5,0" decel="6.5" id="CarACC" impatience="0.0" length="5.0" maxSpeed="70.0" minGap="1.0" probability="0.0" sigma="0.0" stepping="1.0" tau="0.85" />
   </vTypeDistribution>
 

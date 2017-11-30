@@ -59,7 +59,6 @@ def run(run_time, tau_p, tau_np):
 
     ## Computing capacity 
     capacity_vec = []
-    
     while traci.simulation.getMinExpectedNumber() > 0 and step <= run_time*(1/settings.step_length): 
         traci.simulationStep() # advance a simulation step
 
@@ -93,8 +92,8 @@ def run(run_time, tau_p, tau_np):
 
         ## PLATOON CREATION
         # Creates platoons if active, one line for each intersection and road segment.
-        targetTau   = tau_p; targetMinGap = 4.0;
-        caccTau    = tau_np; caccMinGap   = 4.0;
+        targetTau   = tau_p; targetMinGap = 3.0;
+        caccTau    = tau_np; caccMinGap   = 3.0;
 
         if platooning and (step % platoon_check == 0):
             create_platoons("gneE2", "_0", 0, 1e10, caccTau, caccMinGap, 
@@ -129,7 +128,7 @@ def run(run_time, tau_p, tau_np):
     '''
     
     print "\n \n"
-    print "Capacity Vector:"
+    print "Capacity Vector: %d measurements" % len(capacity_vec)
     print "Mean:", np.mean(capacity_vec)
     print "STD:", np.std(capacity_vec)
     #print "Mean, std speed: %f, %f" % (np.mean(car_speeds), np.std(car_speeds)) + "\n"
@@ -182,7 +181,7 @@ if __name__ == "__main__":
 
     alphas    = list(np.linspace(0.0, 1, 20))
     #alphas    = list(np.arange(0.95, 1.0, 0.01))
-    run_time  = 10 * 60
+    run_time  = 60 * 60
     path      = "./network/single.rou.xml"
     if not os.path.exists(path): 
         sys.exit('Cant find route file for sumo!')
@@ -191,7 +190,7 @@ if __name__ == "__main__":
     tau_p  = 2.0
     tau_np = 3.0
     max_speed = 13.00
-    min_gap   = 4.0
+    min_gap   = 3.0
     h_p  = tau_p  * max_speed + min_gap # tau_platoon * speed limit of road + minGap
     h_np = tau_np * max_speed + min_gap # tau_manual  * speed limit of road + minGap
     d, l = 3500., 5.0         # distance between sensors, length of cars
