@@ -93,7 +93,7 @@ def run(run_time, tau_p, tau_np):
         ## PLATOON CREATION
         # Creates platoons if active, one line for each intersection and road segment.
         targetTau   = tau_p; targetMinGap = 3.0;
-        caccTau    = tau_np; caccMinGap   = 3.0;
+        caccTau    = tau_np; caccMinGap   = 3.0; # caccTau = tau_np for capacity model 1
 
         if platooning and (step % platoon_check == 0):
             create_platoons("gneE2", "_0", 0, 1e10, caccTau, caccMinGap, 
@@ -179,15 +179,15 @@ if __name__ == "__main__":
     else:
         sumoBinary = checkBinary('sumo')
 
-    alphas    = list(np.linspace(0.0, 1, 20))
+    alphas    = list(np.linspace(0.0, 1.0, 20))
     #alphas    = list(np.arange(0.95, 1.0, 0.01))
-    run_time  = 60 * 60
+    run_time  = 60 * 10
     path      = "./network/single.rou.xml"
     if not os.path.exists(path): 
         sys.exit('Cant find route file for sumo!')
     output    = []
 
-    tau_p  = 2.0
+    tau_p  = 1.0
     tau_np = 3.0
     max_speed = 13.00
     min_gap   = 3.0
@@ -223,6 +223,7 @@ if __name__ == "__main__":
     plt.plot(alphaSample, C_2(alphaSample, h_p, h_np, d, l), 'k--' , label = 'Capacity Model 2')
     plt.xlabel('Alpha (Autonomous proportion of traffic)')
     plt.ylabel('Capacity')
+    plt.legend(loc=2)
     plt.title('Capacity vs Autonomy Level of Road')
     plt.savefig("capacity.pdf")
     plt.show()
